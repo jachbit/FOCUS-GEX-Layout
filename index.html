@@ -18,10 +18,41 @@
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body { font: 700 14px/1.4 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
 .wrap { max-width: 1400px; margin: 0 auto; padding: 0 16px 24px; }
-header { padding: 12px 0 10px; border-bottom: 2px solid var(--orange); margin-bottom: 14px; }
-header h1 { margin: 0; font-size: 22px; font-weight: 900; color: var(--orange); }
-header h1 sup { font-size: 12px; }
-header .by { color: var(--white); font-size: 13px; margin-top: 2px; }
+/* ── Header (3-column F.O.C.U.S. standard, from FOCUS-Clock) ── */
+.header { background: #002b5c; border-bottom: 3px solid var(--orange); padding: 12px 24px; display: grid;
+  grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; margin-bottom: 14px; }
+.header-left { display: flex; flex-direction: column; gap: 2px; }
+.brand { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+.brand span { color: var(--orange); }
+.brand sup { font-size: 12px; color: #fff; }
+.hdr-subtitle { font-size: 12px; color: var(--yellow); font-weight: 700; margin: 2px 0; }
+.hdr-copy { font-size: 12px; color: #fff; }
+.hdr-copy a, footer a { color: var(--orange); font-weight: 700; text-decoration: none; }
+.header-center { text-align: center; }
+.hdr-disclaimer-title { font-size: 13px; font-weight: 800; color: var(--yellow); }
+.hdr-disclaimer-body { font-size: 12px; color: var(--yellow); margin-top: 2px; }
+.header-right { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
+.hdr-clock-wrap { text-align: right; line-height: 1.25; }
+.hdr-clock-label { font-size: 12px; font-weight: 800; color: var(--orange); letter-spacing: 1px; text-transform: uppercase; }
+#hdr-time { font-size: 22px; font-weight: 800; color: #fff; font-family: 'Roboto Mono', Consolas, monospace; }
+#hdr-date { font-size: 12px; color: #93c5fd; font-weight: 700; }
+.hdr-sess { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 3px; font-size: 12px; font-weight: 800; color: #fff; }
+.sess { padding: 1px 8px; border-radius: 5px; border: 2px solid; letter-spacing: .5px; }
+.sess.rth { color: var(--green); border-color: var(--green); }
+.sess.pre, .sess.post { color: var(--yellow); border-color: var(--yellow); }
+.sess.closed { color: var(--red); border-color: var(--red); }
+#hdr-cd { font-family: 'Roboto Mono', Consolas, monospace; }
+#hdr-cd .lbl { color: var(--orange); font-family: "Segoe UI", system-ui, sans-serif; margin-right: 4px; }
+#hdr-holiday { font-size: 12px; font-weight: 800; color: var(--yellow); }
+.btn-pdf { background: transparent; }
+@media (max-width: 760px) {
+  .header { grid-template-columns: 1fr; text-align: center; padding: 12px 16px; }
+  .header-left, .header-right { align-items: center; justify-content: center; }
+  .header-right { flex-direction: column; gap: 8px; }
+  .brand { font-size: 19px; }
+  .hdr-clock-wrap { text-align: center; }
+  .hdr-sess { justify-content: center; }
+}
 h2 { margin: 18px 0 8px; font-size: 16px; font-weight: 900; color: var(--orange); }
 .legend { color: var(--text); }
 .legend b.cw { color: var(--cw); } .legend b.pw { color: var(--pw); } .legend b.fl { color: var(--flip); }
@@ -77,11 +108,30 @@ footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border)
 </style>
 </head>
 <body>
+<!-- ── Header (3-column F.O.C.U.S. standard, clock from FOCUS-Clock) ── -->
+<header class="header">
+  <div class="header-left">
+    <div class="brand">F.<span>O</span>.C.U.S.<sup>&copy;</sup> <span style="color:#fff">&mdash; GEX Layout</span></div>
+    <div class="hdr-subtitle">Gamma flip vs call / put walls &nbsp;&#183;&nbsp; Layouts A&ndash;G &nbsp;&#183;&nbsp; Layout checker &nbsp;&#183;&nbsp; PDF</div>
+    <div class="hdr-copy">&copy; 2026 Jachbit. All rights reserved. May not be shared without consent. &nbsp;&#183;&nbsp; <a href="https://linktr.ee/jachbit" target="_blank" rel="noopener">linktr.ee/jachbit</a></div>
+  </div>
+  <div class="header-center">
+    <div class="hdr-disclaimer-title">&#9888;&nbsp; Disclaimer: TRADING IS RISKY!</div>
+    <div class="hdr-disclaimer-body">This is for personal research only and not financial advice.</div>
+  </div>
+  <div class="header-right">
+    <div class="hdr-clock-wrap">
+      <div class="hdr-clock-label">Jachbit 2026</div>
+      <div id="hdr-time"></div>
+      <div id="hdr-date"></div>
+      <div class="hdr-sess"><span id="hdr-sess" class="sess"></span><span id="hdr-cd"><span class="lbl"></span><span class="val"></span></span></div>
+      <div id="hdr-holiday"></div>
+    </div>
+    <button id="pdf" class="btn-pdf" type="button" title="Save the layouts (and your checked layout) as a PDF">&#128196; PDF</button>
+  </div>
+</header>
+
 <div class="wrap">
-  <header>
-    <h1>F.O.C.U.S.<sup>&copy;</sup> &mdash; GEX Layout</h1>
-    <div class="by">Jachbit 2026 &middot; where the gamma flip sits against the call / put walls &middot; layouts A&ndash;G (from FOCUS SMC)</div>
-  </header>
 
   <h2>Check a layout</h2>
   <div class="checker">
@@ -110,9 +160,13 @@ footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border)
   <div id="grid" class="grid"></div>
 
   <footer>F.O.C.U.S.&copy; GEX Layout &middot; Jachbit 2026 &middot; reference only, not trade advice
-    <span class="noprint">&middot; rules match FOCUS SMC lib/gexLayout.ts (2026-11-06)</span></footer>
+    <span class="noprint">&middot; rules match FOCUS SMC lib/gexLayout.ts (2026-11-06)</span><br>
+    &copy; 2026 Jachbit. All rights reserved. May not be copied or shared without express written consent of the publisher.
+    &nbsp;&middot;&nbsp; <a href="https://linktr.ee/jachbit" target="_blank" rel="noopener">linktr.ee/jachbit</a></footer>
 </div>
 
+<script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/jspdf.plugin.autotable.min.js"></script>
 <script>
 // ── same text, mini charts and rules as FOCUS-SMC dashboard/src/lib/gexLayout.ts ──
 const SCENARIOS = [
@@ -239,6 +293,7 @@ const IDS = ['spot', 'cw', 'pw', 'flip', 'pct', 'step', 'nearPct', 'wallSteps']
 const DEFAULTS = { step: '5', nearPct: '0.15', wallSteps: '2' }
 const KEY = 'focus-gex-layout-standalone'
 const el = id => document.getElementById(id)
+let last = null            // the checker's latest result (for the PDF), null when the inputs are incomplete
 const val = id => { const v = el(id).value.trim(); return v === '' ? null : Number(v) }
 
 function save() {
@@ -252,6 +307,7 @@ function load() {
 
 function update() {
   save()
+  last = null
   const S = val('spot'), cw = val('cw'), pw = val('pw'), flip = val('flip'), pct = val('pct')
   const step = val('step') ?? 5, nearPct = val('nearPct') ?? 0.15, wallSteps = val('wallSteps') ?? 2
   const box = el('result')
@@ -268,6 +324,7 @@ function update() {
     return
   }
   const r = classify(S, cw, pw, flip, pct, step, nearPct, wallSteps)
+  last = { S, cw, pw, flip, pct, r }
   const sc = SCENARIO[r.code], c = TONE_COLOR[sc.tone], [rt, rc] = REGIME[r.regime]
   box.style.borderColor = c
   box.innerHTML = `<div class="code" style="color:${c}">${sc.code}</div>${layoutChart(sc.code)}
@@ -289,6 +346,239 @@ el('example').onclick = () => {
 }
 el('clear').onclick = () => { for (const i of IDS) el(i).value = DEFAULTS[i] ?? ''; update() }
 update()
+
+// ── header clock: New York time, market session and countdown (from FOCUS-Clock) ──
+const ET = 'America/New_York'
+// NYSE full-day holidays and 1:00 PM early closes (update each year from the NYSE calendar)
+const HOLIDAYS = {
+  '2026-01-01': "New Year's Day", '2026-01-19': 'Martin Luther King Jr. Day', '2026-02-16': "Washington's Birthday",
+  '2026-04-03': 'Good Friday', '2026-05-25': 'Memorial Day', '2026-06-19': 'Juneteenth', '2026-07-03': 'Independence Day (observed)',
+  '2026-09-07': 'Labor Day', '2026-11-26': 'Thanksgiving Day', '2026-12-25': 'Christmas Day',
+  '2027-01-01': "New Year's Day", '2027-01-18': 'Martin Luther King Jr. Day', '2027-02-15': "Washington's Birthday",
+  '2027-03-26': 'Good Friday', '2027-05-31': 'Memorial Day', '2027-06-18': 'Juneteenth (observed)', '2027-07-05': 'Independence Day (observed)',
+  '2027-09-06': 'Labor Day', '2027-11-25': 'Thanksgiving Day', '2027-12-24': 'Christmas Day (observed)',
+}
+const EARLY_CLOSE = { '2026-11-27': 'Day after Thanksgiving', '2026-12-24': 'Christmas Eve', '2027-11-26': 'Day after Thanksgiving' }
+const SESSION_LABEL = { pre: 'PRE-MARKET', rth: 'MARKET OPEN', post: 'AFTER HOURS', closed: 'CLOSED' }
+const fmtTz = (d, tz, opts) => new Intl.DateTimeFormat('en-US', { timeZone: tz, ...opts }).format(d)
+const partsIn = (d, tz) => Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit',
+  day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, weekday: 'short' }).formatToParts(d).map(p => [p.type, p.value]))
+const isoIn = (d, tz) => { const p = partsIn(d, tz); return `${p.year}-${p.month}-${p.day}` }
+// ET wall-clock time -> epoch ms (two passes so a daylight-saving day lands right)
+function etToEpoch(iso, h, m) {
+  const [y, mo, dd] = iso.split('-').map(Number)
+  let t = Date.UTC(y, mo - 1, dd, h, m)
+  for (let i = 0; i < 2; i++) {
+    const p = partsIn(new Date(t), ET)
+    t += Date.UTC(y, mo - 1, dd, h, m) - Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute)
+  }
+  return t
+}
+const tradingDay = iso => { const w = new Date(iso + 'T12:00:00Z').getUTCDay(); return w > 0 && w < 6 && !HOLIDAYS[iso] }
+// the day's session marks in ET minutes: pre 4:00, open 9:30, close 16:00 (13:00 early), after hours end 20:00 (17:00 early)
+const marks = iso => EARLY_CLOSE[iso] ? [240, 570, 780, 1020] : [240, 570, 960, 1200]
+function session(now) {
+  const iso = isoIn(now, ET), p = partsIn(now, ET)
+  const mins = (+p.hour % 24) * 60 + +p.minute
+  if (!tradingDay(iso)) return 'closed'
+  const [pre, open, close, end] = marks(iso)
+  return mins < pre ? 'closed' : mins < open ? 'pre' : mins < close ? 'rth' : mins < end ? 'post' : 'closed'
+}
+// the next session change (and what it is) within the next 10 days
+function nextChange(now) {
+  const t0 = now.getTime()
+  for (let k = 0; k < 10; k++) {
+    const iso = isoIn(new Date(t0 + k * 86400000), ET)
+    if (!tradingDay(iso)) continue
+    const names = ['pre-market in', 'opens in', 'closes in', 'after hours end in']
+    const m = marks(iso)
+    for (let i = 0; i < 4; i++) {
+      const t = etToEpoch(iso, Math.floor(m[i] / 60), m[i] % 60)
+      if (t > t0) return { t, label: names[i] }
+    }
+  }
+  return null
+}
+function countdown(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600)
+  const m = Math.floor(s % 3600 / 60), sec = s % 60, two = n => String(n).padStart(2, '0')
+  return (d ? `${d}d ` : '') + `${two(h)}:${two(m)}:${two(sec)}`
+}
+function tick() {
+  const now = new Date(), iso = isoIn(now, ET), ss = session(now), nx = nextChange(now)
+  el('hdr-time').textContent = fmtTz(now, ET, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  el('hdr-date').textContent = `${fmtTz(now, ET, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} | ET`
+  el('hdr-sess').className = `sess ${ss}`
+  el('hdr-sess').textContent = SESSION_LABEL[ss]
+  el('hdr-cd').querySelector('.lbl').textContent = nx ? nx.label : ''
+  el('hdr-cd').querySelector('.val').textContent = nx ? countdown(nx.t - now.getTime()) : ''
+  el('hdr-holiday').textContent = HOLIDAYS[iso] ? `Market holiday: ${HOLIDAYS[iso]}` : EARLY_CLOSE[iso] ? `Early close 1:00 PM ET: ${EARLY_CLOSE[iso]}` : ''
+}
+tick()
+setInterval(tick, 1000)
+
+// ── PDF: the A-G table with mini charts, and the checked layout with its math when the checker is filled in ──
+// Page frame (masthead + 3-line footer) and colours copied from FOCUS-CAR-SCHEDULE's pdfFrame (= FOCUS-TMO standard):
+// white page, no colour fills, section bars = light grey band + orange text + orange left bar + orange underline.
+// jsPDF's standard fonts are WinAnsi only, so every string goes through pdfText() (>= <= -> instead of the symbols).
+const pdfText = s => String(s).replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/→/g, '->').replace(/[−–]/g, '-').replace(/×/g, 'x')
+const PDF_TONE = { green: [0, 110, 0], red: [160, 0, 0], yellow: [170, 105, 0], white: [0, 0, 0] }
+const PDF_LINE = { cw: [0, 150, 60], pw: [130, 60, 200], flip: [230, 92, 0] }
+
+/** the mini chart drawn straight into the PDF (mm): same DIAGRAMS as the page */
+function pdfChart(doc, code, x0, y0, w, h) {
+  const d = DIAGRAMS[code]
+  const labW = 9, pw = w - labW
+  const Y = v => y0 + h - 1 - v * (h - 2) / 60
+  const X = x => x0 + x * pw
+  const near = Math.min(Math.abs(d.flip - d.cw), Math.abs(d.flip - d.pw)) < 7
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(5.5)
+  for (const [k, t] of [['cw', 'CW'], ['pw', 'PW'], ['flip', 'FLIP']]) {
+    const y = Y(d[k])
+    doc.setDrawColor(...PDF_LINE[k]); doc.setLineWidth(0.35)
+    if (k === 'flip') doc.setLineDashPattern([1, 0.7], 0)
+    doc.line(x0, y, x0 + pw, y)
+    doc.setLineDashPattern([], 0)
+    doc.setTextColor(...PDF_LINE[k])
+    doc.text(t, x0 + pw + 0.8, (k === 'flip' && near ? y + 2.2 : y + 0.9))
+  }
+  doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal')
+  if (!near && d.flip + 9 < 60) doc.text('POS', x0 + pw - 0.5, Y(d.flip) - 0.7, { align: 'right' })
+  if (!near && d.flip - 8 > 0) doc.text('NEG', x0 + pw - 0.5, Y(d.flip) + 2.3, { align: 'right' })
+  doc.setDrawColor(0, 0, 0)
+  const path = (p, dashed) => {
+    doc.setLineWidth(dashed ? 0.2 : 0.35)
+    if (dashed) doc.setLineDashPattern([0.7, 0.5], 0)
+    for (let i = 1; i < p.length; i++) doc.line(X(p[i - 1][0]), Y(p[i - 1][1]), X(p[i][0]), Y(p[i][1]))
+    doc.setLineDashPattern([], 0)
+    const e = p[p.length - 1]
+    doc.setFillColor(0, 0, 0); doc.circle(X(e[0]), Y(e[1]), 0.5, 'F')
+  }
+  for (const p of d.paths) path(p, false)
+  for (const p of d.alt || []) path(p, true)
+  for (const [x, y, t] of d.notes || []) doc.text(t, X(x), Y(y))
+}
+
+function buildPdf() {
+  const C = { navy: [0, 43, 92], orange: [230, 92, 0], darkGrey: [68, 68, 68], black: [0, 0, 0], lightGrey: [240, 240, 240], midGrey: [209, 209, 209] }
+  const TITLE = 'F.O.C.U.S.© — GEX Layout'
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' })
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 12.7
+  const now = new Date()
+  const stamp = fmtTz(now, ET, { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' ET'
+
+  function onPage() {
+    doc.setTextColor(...C.navy); doc.setFont('helvetica', 'bold'); doc.setFontSize(9)
+    doc.text(TITLE, M, 7)
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...C.darkGrey)
+    doc.text('Jachbit 2026  |  ' + fmtTz(now, ET, { year: 'numeric', month: 'short', day: 'numeric' }), W - M, 7, { align: 'right' })
+    doc.setDrawColor(...C.midGrey); doc.setLineWidth(0.18)
+    doc.line(M, 9, W - M, 9)
+    doc.line(M, H - 19.05, W - M, H - 19.05)
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...C.darkGrey)
+    doc.text('F.O.C.U.S.©  |  Jachbit 2026  |  GEX Layout reference - for personal research only, not financial advice.', W / 2, H - 15.52, { align: 'center' })
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...C.navy)
+    doc.text('Page ' + doc.internal.getNumberOfPages(), W - M, H - 15.52, { align: 'right' })
+    doc.setFontSize(6); doc.setTextColor(...C.black)
+    doc.text('John 3:16   |   1 John 3:16   |   Matt 6:33   |   Jer 33:3   |   Prov 3:5-6   |   Prov 27:17', W / 2, H - 11.64, { align: 'center' })
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(5.5); doc.setTextColor(...C.darkGrey)
+    doc.text('© 2026 Jachbit. All rights reserved. May not be copied or shared without express written consent of the publisher.  |  linktr.ee/jachbit', W / 2, H - 7.76, { align: 'center' })
+  }
+  // section bar: light grey band + orange text + orange left bar + orange underline (no colour fills)
+  function sectionBar(y, text) {
+    doc.setFillColor(...C.lightGrey); doc.rect(M, y, W - 2 * M, 6, 'F')
+    doc.setDrawColor(...C.orange); doc.setLineWidth(1.2); doc.line(M + 0.6, y, M + 0.6, y + 6)
+    doc.setLineWidth(0.4); doc.line(M, y + 6, W - M, y + 6)
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...C.orange)
+    doc.text(text, M + 3, y + 4.2)
+    return y + 9
+  }
+
+  // title block + subtitle naming what this PDF covers
+  const sub = last
+    ? `checked layout ${last.r.code}: price ${f(last.S)} · CW ${f(last.cw)} · PW ${f(last.pw)} · flip ${last.flip == null ? 'none' : f(last.flip)} · net / gross ${last.pct}%`
+    : 'reference: layouts A-G (checker not filled in)'
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(...C.navy)
+  doc.text(TITLE, W / 2, 17, { align: 'center' })
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...C.darkGrey)
+  doc.text(pdfText(`Jachbit 2026  ·  ${stamp}  ·  7 layouts  ·  ${sub}`), W / 2, 22.5, { align: 'center' })
+  doc.setDrawColor(...C.midGrey); doc.setLineWidth(0.18); doc.line(M, 25, W - M, 25)
+  let y = 28
+
+  // the checked layout with its math
+  if (last) {
+    const sc = SCENARIO[last.r.code]
+    y = sectionBar(y, `YOUR LAYOUT: ${sc.code}  -  ${sc.layout}`)
+    pdfChart(doc, sc.code, M + 2, y - 1, 40, 17)
+    const tx = M + 48, tw = W - M - tx
+    const lines = [
+      [C.black, 'bold', `${REGIME[last.r.regime][0]}  ·  price ${f(last.S)}  ·  CW ${f(last.cw)} (${f(Math.abs(last.cw - last.S))} away)  ·  PW ${f(last.pw)} (${f(Math.abs(last.S - last.pw))} away)  ·  flip ${last.flip == null ? 'none' : f(last.flip)}`],
+      ...last.r.why.map(w => [C.navy, 'normal', '= ' + w]),
+      [PDF_TONE.green, 'bold', 'Look for: ' + sc.look],
+      [PDF_TONE.red, 'bold', 'Avoid: ' + sc.avoid],
+    ]
+    let ty = y + 2
+    doc.setFontSize(8)
+    for (const [col, st, t] of lines) {
+      doc.setFont('helvetica', st); doc.setTextColor(...col)
+      const wrapped = doc.splitTextToSize(pdfText(t), tw)
+      doc.text(wrapped, tx, ty)
+      ty += wrapped.length * 3.4
+    }
+    y = Math.max(ty, y + 18) + 2
+  }
+
+  // the A-G table
+  y = sectionBar(y, 'THE SEVEN LAYOUTS')
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...C.black)
+  const legend = doc.splitTextToSize('Above the flip dealers are long gamma (they sell strength, buy weakness: quieter, mean-reverting); below it they are short gamma (they chase price: faster, trending). '
+    + 'Charts: green = CALL WALL · purple = PUT WALL · orange dashed = GAMMA FLIP · black line = price (dashed = the other way it can go) · POS / NEG = gamma side of the flip. '
+    + 'Regime: net / gross GEX above +2% = positive, below -2% = negative, in between = neutral.', W - 2 * M)
+  doc.text(legend, M, y)
+  y += legend.length * 3 + 1
+
+  const on = last ? last.r.code : null
+  doc.autoTable({
+    startY: y,
+    margin: { top: 13, left: M, right: M, bottom: 22 },
+    head: [['', 'CHART', 'LAYOUT', 'WHAT IT MEANS', 'LOOK FOR', 'AVOID']],
+    body: SCENARIOS.map(s => [s.code, '', s.layout, s.means, s.look, s.avoid].map(pdfText)),
+    theme: 'grid',
+    rowPageBreak: 'avoid',          // never split a layout (and its mini chart) across two pages
+    styles: { font: 'helvetica', fontSize: 7.5, cellPadding: 1.2, textColor: C.black, lineColor: C.midGrey, lineWidth: 0.15, valign: 'middle', minCellHeight: 14.5 },
+    headStyles: { fillColor: C.lightGrey, textColor: C.navy, fontStyle: 'bold', fontSize: 8, minCellHeight: 0, lineColor: C.midGrey },
+    columnStyles: {
+      0: { cellWidth: 8, halign: 'center', fontStyle: 'bold', fontSize: 13 },
+      1: { cellWidth: 44 },
+      2: { cellWidth: 40, fontStyle: 'bold' },
+      3: { cellWidth: 'auto' },
+      4: { cellWidth: 52, textColor: PDF_TONE.green, fontStyle: 'bold' },
+      5: { cellWidth: 46, textColor: PDF_TONE.red, fontStyle: 'bold' },
+    },
+    didParseCell: data => {
+      const s = data.section === 'body' && data.column.index === 0 && SCENARIO[data.row.raw && data.row.raw[0]]
+      if (s) data.cell.styles.textColor = s.code === on ? PDF_TONE[s.tone] : C.black
+    },
+    didDrawCell: data => {
+      const s = data.section === 'body' && SCENARIO[data.row.raw && data.row.raw[0]]
+      if (!s) return
+      const c = data.cell
+      if (data.column.index === 1) pdfChart(doc, s.code, c.x + 1.5, c.y + 0.5, c.width - 3, c.height - 1)
+      if (s.code === on) {   // your layout: orange rule above and below the row (no fill)
+        doc.setDrawColor(...C.orange); doc.setLineWidth(0.6)
+        doc.line(c.x, c.y, c.x + c.width, c.y); doc.line(c.x, c.y + c.height, c.x + c.width, c.y + c.height)
+      }
+    },
+    didDrawPage: onPage,
+  })
+
+  const ts = isoIn(now, ET).replace(/-/g, '') + '_' + fmtTz(now, ET, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).replace(/:/g, '')
+  doc.save(`FOCUS_GEX_Layout_${last ? last.r.code + '_' : ''}${ts}.pdf`)
+}
+el('pdf').onclick = () => {
+  if (!window.jspdf || !window.jspdf.jsPDF) { alert('The PDF library did not load - check your connection and reload the page.'); return }
+  try { buildPdf() } catch (err) { alert('PDF export failed: ' + err.message) }
+}
 </script>
 </body>
 </html>
