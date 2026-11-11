@@ -1,0 +1,9 @@
+.env
+*.token
+*_token.json
+*_backup_*
+*_20[0-9][0-9][0-9][0-9][0-9][0-9]_*
+*.bak
+__pycache__/
+.DS_Store
+Thumbs.db

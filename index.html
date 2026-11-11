@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F.O.C.U.S.© GEX Layout</title>
+<!-- F.O.C.U.S. GEX Layout - standalone reference (2026-11-10), extracted from FOCUS-SMC
+     dashboard/src/lib/gexLayout.ts + windows/gex/GexLayoutWindow.tsx (same text, same mini charts, same rules).
+     No server, no credentials, no live data: the checker below takes the levels you type in. -->
+<style>
+:root {
+  --bg: #141b26; --panel: #1b2433; --panel-2: #222d3f; --row-sel: #2e3e57; --border: #2c3a4f;
+  --text: #e8edf5; --white: #e8e8e8; --orange: rgb(230, 92, 0); --accent: #3b82f6;
+  --cw: #22c55e; --pw: #a855f7; --flip: #f59e0b;
+  --green: #22c55e; --red: #ef4444; --yellow: #fbbf24;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font: 700 14px/1.4 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 0 16px 24px; }
+header { padding: 12px 0 10px; border-bottom: 2px solid var(--orange); margin-bottom: 14px; }
+header h1 { margin: 0; font-size: 22px; font-weight: 900; color: var(--orange); }
+header h1 sup { font-size: 12px; }
+header .by { color: var(--white); font-size: 13px; margin-top: 2px; }
+h2 { margin: 18px 0 8px; font-size: 16px; font-weight: 900; color: var(--orange); }
+.legend { color: var(--text); }
+.legend b.cw { color: var(--cw); } .legend b.pw { color: var(--pw); } .legend b.fl { color: var(--flip); }
+
+/* checker */
+.checker { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.inputs { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; }
+.inputs label { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--white); }
+.inputs input { width: 110px; padding: 5px 7px; background: var(--bg); color: #fff; border: 1px solid #fff;
+  border-radius: 5px; font: 700 14px "Segoe UI", system-ui, sans-serif; }
+.inputs input.sm { width: 70px; }
+.inputs .hint { font-size: 12px; color: var(--yellow); }
+button { background: var(--accent); color: #fff; border: 1px solid #fff; border-radius: 5px; padding: 6px 12px;
+  font: 800 13px "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+button.ghost { background: transparent; }
+.result { margin-top: 12px; border: 2px solid var(--border); border-radius: 8px; padding: 8px 12px; display: flex;
+  gap: 14px; align-items: center; flex-wrap: wrap; }
+.result .code { font-size: 44px; font-weight: 900; line-height: 1; }
+.result .body { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; gap: 3px; }
+.result .title { font-size: 15px; font-weight: 900; }
+.result .math { font-family: Consolas, "Cascadia Mono", monospace; font-size: 13px; color: var(--white); }
+.look { color: var(--green); } .avoid { color: var(--red); }
+.warn { color: var(--yellow); }
+
+/* A-G table */
+.grid { display: grid; grid-template-columns: 34px 200px minmax(140px,1fr) minmax(180px,1.4fr) minmax(150px,1.1fr) minmax(150px,1fr);
+  border: 1px solid var(--border); }
+.grid > div { padding: 4px 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; }
+.grid .h { font-size: 12px; font-weight: 800; color: var(--orange); background: var(--panel-2); }
+.grid .c { font-size: 20px; font-weight: 900; justify-content: center; }
+.grid .l { font-weight: 800; }
+.grid .k { color: var(--green); } .grid .a { color: var(--red); }
+.grid .on { background: var(--row-sel); }
+.grid .lbl { display: none; }
+
+footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 12px; color: var(--white); }
+
+/* phone: each layout becomes a card */
+@media (max-width: 820px) {
+  .grid { grid-template-columns: 1fr; border: 0; gap: 10px; }
+  .grid .h { display: none; }
+  .grid > div { border: 0; padding: 2px 10px; display: block; }
+  .grid .c { justify-content: flex-start; padding-top: 8px; background: var(--panel-2); border-radius: 8px 8px 0 0; }
+  .grid .g { padding: 6px 10px; }
+  .grid .lbl { display: inline; color: var(--orange); font-size: 12px; font-weight: 800; margin-right: 4px; }
+  .grid .row-end { padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+}
+@media print {
+  html, body { background: #fff; color: #000; }
+  .checker, footer .noprint { display: none; }
+  :root { --text: #000; --white: #000; --border: #bbb; --panel-2: #f2f2f2; --row-sel: #f2f2f2; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>F.O.C.U.S.<sup>&copy;</sup> &mdash; GEX Layout</h1>
+    <div class="by">Jachbit 2026 &middot; where the gamma flip sits against the call / put walls &middot; layouts A&ndash;G (from FOCUS SMC)</div>
+  </header>
+
+  <h2>Check a layout</h2>
+  <div class="checker">
+    <div class="inputs">
+      <label>Price <input id="spot" type="number" step="any" inputmode="decimal"></label>
+      <label>Call wall (CW) <input id="cw" type="number" step="any" inputmode="decimal"></label>
+      <label>Put wall (PW) <input id="pw" type="number" step="any" inputmode="decimal"></label>
+      <label>Gamma flip <input id="flip" type="number" step="any" inputmode="decimal" placeholder="blank = none"></label>
+      <label>Net / gross GEX % <input id="pct" type="number" step="any" inputmode="decimal" placeholder="e.g. 35 or -20"></label>
+      <label>Strike step <input id="step" class="sm" type="number" step="any" min="0" inputmode="decimal"></label>
+      <label>E: price within <input id="nearPct" class="sm" type="number" step="0.05" min="0" max="2" inputmode="decimal"><span class="hint">% of the flip</span></label>
+      <label>F: flip within <input id="wallSteps" class="sm" type="number" step="1" min="0" max="10" inputmode="decimal"><span class="hint">strikes of a wall</span></label>
+      <div style="display:flex; gap:8px">
+        <button id="example" class="ghost" type="button">Example</button>
+        <button id="clear" class="ghost" type="button">Clear</button>
+      </div>
+    </div>
+    <div id="result" class="result"><span class="warn">Type price, CW, PW and net / gross % (flip optional) to see the layout and its math.</span></div>
+  </div>
+
+  <h2>The seven layouts</h2>
+  <p class="legend">Above the flip dealers are long gamma (they sell strength, buy weakness: quieter, mean-reverting); below it they are short
+    gamma (they chase price: faster, trending). Charts: <b class="cw">green = CALL WALL</b> &middot; <b class="pw">purple = PUT WALL</b> &middot;
+    <b class="fl">orange dashed = GAMMA FLIP</b> &middot; <b>line = price</b> (dashed = the other way it can go) &middot; <b>POS / NEG</b> = gamma side of the flip.
+    Regime: net / gross GEX above +2% = positive, below &minus;2% = negative, in between = neutral.</p>
+  <div id="grid" class="grid"></div>
+
+  <footer>F.O.C.U.S.&copy; GEX Layout &middot; Jachbit 2026 &middot; reference only, not trade advice
+    <span class="noprint">&middot; rules match FOCUS SMC lib/gexLayout.ts (2026-11-06)</span></footer>
+</div>
+
+<script>
+// ── same text, mini charts and rules as FOCUS-SMC dashboard/src/lib/gexLayout.ts ──
+const SCENARIOS = [
+  { code: 'A', layout: 'PW < FLIP < CW, price ABOVE the flip', tone: 'green',
+    means: 'Positive gamma: dealers sell rallies and buy dips. Quieter, mean-reverting; CW is the ceiling, the flip is the floor.',
+    look: 'Fades at the CW; pullbacks that hold the flip; ranges between flip and CW.',
+    avoid: 'Chasing a break of the CW; shorting right on the flip.' },
+  { code: 'B', layout: 'PW < FLIP < CW, price BELOW the flip', tone: 'red',
+    means: 'Negative gamma pocket: dealers chase price. Faster moves; the flip turns into resistance, the PW pulls price down.',
+    look: 'Rejections at the flip; moves toward the PW; a reclaim of the flip = back to A.',
+    avoid: 'Buying a falling market before the PW holds; tight stops.' },
+  { code: 'C', layout: 'FLIP ABOVE both walls (CW and PW below it)', tone: 'red',
+    means: 'The whole wall range is negative gamma: trend and volatile days. Rallies to the CW are often sold; breaks of the PW can run.',
+    look: 'Trend continuation with structure; CW as a sell zone; PW break and hold = extension.',
+    avoid: 'Fading strong momentum; expecting a quiet range; full size.' },
+  { code: 'D', layout: 'FLIP BELOW both walls (PW and CW above it)', tone: 'green',
+    means: 'The whole wall range is positive gamma: pinning. Price tends to stay between the walls, breakouts fail.',
+    look: 'Buy near the PW, sell near the CW; reversals at the walls.',
+    avoid: 'Breakout trades; a loss of the PW toward the flip = regime change, stop fading.' },
+  { code: 'E', layout: 'FLIP AT PRICE (regime NEUTRAL, under 2%)', tone: 'yellow',
+    means: 'Calls and puts cancel: no dealer edge either way. The next move decides the regime.',
+    look: 'Acceptance above (-> A / D) or below (-> B / C) the flip before acting.',
+    avoid: 'Committing early; full size. Half size or wait.' },
+  { code: 'F', layout: 'FLIP AT A WALL (within a strike or two)', tone: 'yellow',
+    means: 'That wall is also the pivot: holding it keeps the regime, breaking it flips it.',
+    look: 'Break and hold through the wall = follow it; rejection = fade back into the range.',
+    avoid: 'Fading a clean break and hold of that wall.' },
+  { code: 'G', layout: 'PRICE OUTSIDE the walls (above CW / below PW)', tone: 'white',
+    means: 'Positive gamma: usually pulled back inside. Negative gamma: can keep running to the next big strike.',
+    look: 'Regime first: positive = fade back to the wall; negative = trail the move.',
+    avoid: 'Fading in negative gamma; chasing in positive gamma.' },
+]
+const SCENARIO = Object.fromEntries(SCENARIOS.map(s => [s.code, s]))
+const DIAGRAMS = {
+  A: { cw: 50, flip: 30, pw: 10, paths: [[[0, 35], [.15, 46], [.3, 37], [.45, 48], [.6, 36], [.75, 47], [.92, 40]]] },
+  B: { cw: 52, flip: 38, pw: 10, paths: [[[0, 33], [.15, 37.5], [.3, 27], [.45, 34], [.6, 20], [.75, 12], [.92, 17]]] },
+  C: { cw: 38, flip: 54, pw: 20, paths: [[[0, 34], [.15, 37.5], [.3, 29], [.45, 33], [.6, 22], [.75, 16], [.92, 5]]] },
+  D: { cw: 48, flip: 8, pw: 22, paths: [[[0, 30], [.15, 46], [.3, 25], [.45, 46], [.6, 24], [.75, 45], [.92, 35]]] },
+  E: { cw: 54, flip: 31, pw: 8, paths: [[[0, 29], [.15, 33], [.3, 29.5], [.45, 32.5], [.55, 31]]], alt: [[[.55, 31], [.92, 47]], [[.55, 31], [.92, 15]]] },
+  F: { cw: 40, flip: 37, pw: 10, paths: [[[0, 28], [.15, 35], [.3, 31], [.45, 41], [.6, 46], [.75, 43], [.92, 52]]], alt: [[[.45, 41], [.6, 36], [.92, 24]]] },
+  G: { cw: 38, flip: 24, pw: 10, paths: [[[0, 33], [.2, 45], [.4, 50], [.6, 45], [.92, 33]]], alt: [[[.4, 50], [.78, 58]]],
+       notes: [[.02, 52, 'NEG: runs'], [.45, 27, 'POS: back in']] },
+}
+const LAYOUT_COLOR = { cw: '#22c55e', pw: '#a855f7', flip: '#f59e0b' }
+const TONE_COLOR = { green: '#22c55e', red: '#ef4444', yellow: '#fbbf24', white: '#e8e8e8' }
+const REGIME = { positive: ['POSITIVE GAMMA', '#22c55e'], negative: ['NEGATIVE GAMMA', '#ef4444'], neutral: ['NEUTRAL GAMMA', '#fbbf24'] }
+
+/** the Flight Plan's mini chart for one layout (thin lines only) */
+function layoutChart(code, w = 190, h = 100) {
+  const d = DIAGRAMS[code]
+  const labW = 32, pw = w - labW
+  const Y = v => h - 5 - v * (h - 10) / 60
+  const pts = p => p.map(([x, y]) => `${x * pw},${Y(y)}`).join(' ')
+  const near = Math.min(Math.abs(d.flip - d.cw), Math.abs(d.flip - d.pw)) < 7
+  let s = `<svg width="${w}" height="${h}" style="display:block" role="img" aria-label="layout ${code} chart">`
+  s += `<line x1="0.5" y1="2" x2="0.5" y2="${h - 2}" stroke="var(--border)"/>`
+  for (const [k, t] of [['cw', 'CW'], ['pw', 'PW'], ['flip', 'FLIP']]) {
+    const y = Y(d[k]), ly = k === 'flip' && near ? y + 10 : y + 4
+    s += `<line x1="0" y1="${y}" x2="${pw}" y2="${y}" stroke="${LAYOUT_COLOR[k]}" stroke-width="1.6"${k === 'flip' ? ' stroke-dasharray="4 3"' : ''}/>`
+    s += `<text x="${pw + 3}" y="${ly}" fill="${LAYOUT_COLOR[k]}" font-size="12" font-weight="800">${t}</text>`
+  }
+  if (!near && d.flip + 9 < 60) s += `<text x="${pw - 2}" y="${Y(d.flip) - 3}" fill="var(--text)" font-size="12" font-weight="700" text-anchor="end">POS</text>`
+  if (!near && d.flip - 8 > 0) s += `<text x="${pw - 2}" y="${Y(d.flip) + 12}" fill="var(--text)" font-size="12" font-weight="700" text-anchor="end">NEG</text>`
+  const end = p => p[p.length - 1]
+  for (const p of d.paths) s += `<polyline points="${pts(p)}" fill="none" stroke="var(--text)" stroke-width="1.6"/><circle cx="${end(p)[0] * pw}" cy="${Y(end(p)[1])}" r="2.5" fill="var(--text)"/>`
+  for (const p of d.alt || []) s += `<polyline points="${pts(p)}" fill="none" stroke="var(--text)" stroke-width="1" stroke-dasharray="3 2"/><circle cx="${end(p)[0] * pw}" cy="${Y(end(p)[1])}" r="2.5" fill="var(--text)"/>`
+  for (const [x, y, t] of d.notes || []) s += `<text x="${x * pw}" y="${Y(y)}" fill="var(--text)" font-size="12" font-weight="700">${t}</text>`
+  return s + '</svg>'
+}
+
+const f = x => (Math.abs(x) >= 1000 ? x.toLocaleString('en-US', { maximumFractionDigits: 2 }) : x.toFixed(2))
+
+/** the layout (A-G) with the math. Rules in order: G outside the walls, E flip at price / neutral, F flip at a wall,
+ *  C flip above both walls, D below both, A / B flip between the walls with price above / below it. */
+function classify(S, cw, pw, flip, pct, step, nearPct, wallSteps) {
+  const regime = Math.abs(pct) < 2 ? 'neutral' : pct > 0 ? 'positive' : 'negative'
+  const why = [`regime: net / gross ${pct.toFixed(1)}% → ${regime === 'neutral' ? `|${pct.toFixed(1)}%| < 2%` : pct > 0 ? '≥ +2%' : '≤ −2%'} → ${regime}`]
+  const res = (code, line) => ({ code, regime, why: [...why, line] })
+  if (S > cw) return res('G', `G: price ${f(S)} > CW ${f(cw)} by ${f(S - cw)} → above the call wall (regime ${regime})`)
+  if (S < pw) return res('G', `G: price ${f(S)} < PW ${f(pw)} by ${f(pw - S)} → below the put wall (regime ${regime})`)
+  if (flip == null) {
+    if (regime === 'negative') return res('C', 'C: no flip in the strike range and NEGATIVE gamma → the whole map is short gamma (flip beyond the walls)')
+    if (regime === 'positive') return res('D', 'D: no flip in the strike range and POSITIVE gamma → the whole map is long gamma (flip beyond the walls)')
+    return res('E', `E: no flip in the strike range and NEUTRAL gamma (|${pct.toFixed(1)}%| < 2%)`)
+  }
+  const nearPts = S * nearPct / 100
+  if (regime === 'neutral') return res('E', `E: regime NEUTRAL: |net / gross| ${Math.abs(pct).toFixed(1)}% < 2%`)
+  if (Math.abs(S - flip) <= nearPts)
+    return res('E', `E: |price - flip| = |${f(S)} - ${f(flip)}| = ${f(Math.abs(S - flip))} ≤ ${nearPct}% x ${f(S)} = ${f(nearPts)}`)
+  const wallPts = wallSteps * step
+  const dC = Math.abs(flip - cw), dP = Math.abs(flip - pw)
+  if (Math.min(dC, dP) <= wallPts) {
+    const w = dC <= dP ? `CW ${f(cw)}` : `PW ${f(pw)}`
+    return res('F', `F: |flip - ${w}| = ${f(Math.min(dC, dP))} ≤ ${wallSteps} strikes x ${f(step)} = ${f(wallPts)}`)
+  }
+  why.push(`E not met: |price - flip| = ${f(Math.abs(S - flip))} > ${nearPct}% x ${f(S)} = ${f(nearPts)} · F not met: nearest wall ${f(Math.min(dC, dP))} away > ${wallSteps} x ${f(step)} = ${f(wallPts)}`)
+  if (flip > cw) return res('C', `C: flip ${f(flip)} > CW ${f(cw)} > PW ${f(pw)} → both walls on the negative gamma side`)
+  if (flip < pw) return res('D', `D: flip ${f(flip)} < PW ${f(pw)} < CW ${f(cw)} → both walls on the positive gamma side`)
+  return S >= flip
+    ? res('A', `A: PW ${f(pw)} < flip ${f(flip)} < CW ${f(cw)}, price ${f(S)} ≥ flip by ${f(S - flip)}`)
+    : res('B', `B: PW ${f(pw)} < flip ${f(flip)} < CW ${f(cw)}, price ${f(S)} < flip by ${f(flip - S)}`)
+}
+
+// ── the A-G table ──
+function renderGrid(on) {
+  const g = document.getElementById('grid')
+  let h = ['', 'CHART', 'LAYOUT', 'WHAT IT MEANS', 'LOOK FOR', 'AVOID'].map(t => `<div class="h">${t}</div>`).join('')
+  for (const s of SCENARIOS) {
+    const sel = s.code === on
+    const cls = sel ? ' on' : ''
+    const bar = sel ? ` style="box-shadow: inset 0 2px 0 ${TONE_COLOR[s.tone]}, inset 0 -2px 0 ${TONE_COLOR[s.tone]}"` : ''
+    h += `<div class="c${cls}"${bar}><span style="color:${sel ? TONE_COLOR[s.tone] : 'var(--text)'}">${s.code}</span></div>`
+      + `<div class="g${cls}"${bar}>${layoutChart(s.code)}</div>`
+      + `<div class="l${cls}"${bar}><span><span class="lbl">LAYOUT</span>${s.layout}</span></div>`
+      + `<div class="m${cls}"${bar}><span><span class="lbl">WHAT IT MEANS</span>${s.means}</span></div>`
+      + `<div class="k${cls}"${bar}><span><span class="lbl">LOOK FOR</span>${s.look}</span></div>`
+      + `<div class="a row-end${cls}"${bar}><span><span class="lbl">AVOID</span>${s.avoid}</span></div>`
+  }
+  g.innerHTML = h
+}
+
+// ── the checker ──
+const IDS = ['spot', 'cw', 'pw', 'flip', 'pct', 'step', 'nearPct', 'wallSteps']
+const DEFAULTS = { step: '5', nearPct: '0.15', wallSteps: '2' }
+const KEY = 'focus-gex-layout-standalone'
+const el = id => document.getElementById(id)
+const val = id => { const v = el(id).value.trim(); return v === '' ? null : Number(v) }
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(Object.fromEntries(IDS.map(i => [i, el(i).value])))) } catch { /* private window */ }
+}
+function load() {
+  let saved = {}
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') } catch { /* private window */ }
+  for (const i of IDS) el(i).value = saved[i] ?? DEFAULTS[i] ?? ''
+}
+
+function update() {
+  save()
+  const S = val('spot'), cw = val('cw'), pw = val('pw'), flip = val('flip'), pct = val('pct')
+  const step = val('step') ?? 5, nearPct = val('nearPct') ?? 0.15, wallSteps = val('wallSteps') ?? 2
+  const box = el('result')
+  if (S == null || cw == null || pw == null || pct == null) {
+    box.style.borderColor = 'var(--border)'
+    box.innerHTML = '<span class="warn">Type price, CW, PW and net / gross % (flip optional) to see the layout and its math.</span>'
+    renderGrid(null)
+    return
+  }
+  if (pw >= cw) {
+    box.style.borderColor = 'var(--yellow)'
+    box.innerHTML = `<span class="warn">The put wall (${f(pw)}) should be below the call wall (${f(cw)}) - check the levels.</span>`
+    renderGrid(null)
+    return
+  }
+  const r = classify(S, cw, pw, flip, pct, step, nearPct, wallSteps)
+  const sc = SCENARIO[r.code], c = TONE_COLOR[sc.tone], [rt, rc] = REGIME[r.regime]
+  box.style.borderColor = c
+  box.innerHTML = `<div class="code" style="color:${c}">${sc.code}</div>${layoutChart(sc.code)}
+    <div class="body">
+      <div class="title" style="color:${c}">${sc.layout}</div>
+      <div><span style="color:${rc}">${rt}</span> · price ${f(S)} · CW ${f(cw)} (${f(Math.abs(cw - S))} away) · PW ${f(pw)} (${f(Math.abs(S - pw))} away) · flip ${flip == null ? 'none' : f(flip)}</div>
+      ${r.why.map(w => `<div class="math">= ${w}</div>`).join('')}
+      <div><span class="look">Look for:</span> ${sc.look} <span class="avoid">Avoid:</span> ${sc.avoid}</div>
+    </div>`
+  renderGrid(r.code)
+}
+
+load()
+for (const i of IDS) el(i).addEventListener('input', update)
+el('example').onclick = () => {
+  const ex = { spot: '7560', cw: '7625', pw: '7440', flip: '7539.76', pct: '24', step: '5', nearPct: '0.15', wallSteps: '2' }
+  for (const i of IDS) el(i).value = ex[i]
+  update()
+}
+el('clear').onclick = () => { for (const i of IDS) el(i).value = DEFAULTS[i] ?? ''; update() }
+update()
+</script>
+</body>
+</html>
