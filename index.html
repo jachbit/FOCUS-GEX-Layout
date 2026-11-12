@@ -64,6 +64,9 @@ h2 { margin: 18px 0 8px; font-size: 16px; font-weight: 900; color: var(--orange)
 .inputs input { width: 110px; padding: 5px 7px; background: var(--bg); color: #fff; border: 1px solid #fff;
   border-radius: 5px; font: 700 14px "Segoe UI", system-ui, sans-serif; }
 .inputs input.sm { width: 70px; }
+.inputs input#flip { width: 130px; }
+.inputs select { width: 130px; padding: 5px 7px; background: var(--bg); color: #fff; border: 1px solid #fff;
+  border-radius: 5px; font: 700 14px "Segoe UI", system-ui, sans-serif; }
 .inputs .hint { font-size: 12px; color: var(--yellow); }
 button { background: var(--accent); color: #fff; border: 1px solid #fff; border-radius: 5px; padding: 6px 12px;
   font: 800 13px "Segoe UI", system-ui, sans-serif; cursor: pointer; }
@@ -140,7 +143,8 @@ footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border)
       <label>Call wall (CW) <input id="cw" type="number" step="any" inputmode="decimal"></label>
       <label>Put wall (PW) <input id="pw" type="number" step="any" inputmode="decimal"></label>
       <label>Gamma flip <input id="flip" type="number" step="any" inputmode="decimal" placeholder="blank = none"></label>
-      <label>Net / gross GEX % <input id="pct" type="number" step="any" inputmode="decimal" placeholder="e.g. 35 or -20"></label>
+      <label>Regime (SMC badge) <select id="regime" title="Pick what the regime badge in SMC's GEX Levels window says">
+        <option value="positive">Positive</option><option value="negative">Negative</option><option value="neutral">Neutral</option></select></label>
       <label>Strike step <input id="step" class="sm" type="number" step="any" min="0" inputmode="decimal"></label>
       <label>E: price within <input id="nearPct" class="sm" type="number" step="0.05" min="0" max="2" inputmode="decimal"><span class="hint">% of the flip</span></label>
       <label>F: flip within <input id="wallSteps" class="sm" type="number" step="1" min="0" max="10" inputmode="decimal"><span class="hint">strikes of a wall</span></label>
@@ -149,14 +153,14 @@ footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border)
         <button id="clear" class="ghost" type="button">Clear</button>
       </div>
     </div>
-    <div id="result" class="result"><span class="warn">Type price, CW, PW and net / gross % (flip optional) to see the layout and its math.</span></div>
+    <div id="result" class="result"><span class="warn">Type price, CW and PW, pick the regime (flip optional) to see the layout and its math.</span></div>
   </div>
 
   <h2>The seven layouts</h2>
   <p class="legend">Above the flip dealers are long gamma (they sell strength, buy weakness: quieter, mean-reverting); below it they are short
     gamma (they chase price: faster, trending). Charts: <b class="cw">green = CALL WALL</b> &middot; <b class="pw">purple = PUT WALL</b> &middot;
     <b class="fl">orange dashed = GAMMA FLIP</b> &middot; <b>line = price</b> (dashed = the other way it can go) &middot; <b>POS / NEG</b> = gamma side of the flip.
-    Regime: net / gross GEX above +2% = positive, below &minus;2% = negative, in between = neutral.</p>
+    Regime = the badge in SMC's GEX Levels window (net GEX above +2% of gross = positive, below &minus;2% = negative, in between = neutral).</p>
   <div id="grid" class="grid"></div>
 
   <footer>F.O.C.U.S.&copy; GEX Layout &middot; Jachbit 2026 &middot; reference only, not trade advice
@@ -241,19 +245,18 @@ const f = x => (Math.abs(x) >= 1000 ? x.toLocaleString('en-US', { maximumFractio
 
 /** the layout (A-G) with the math. Rules in order: G outside the walls, E flip at price / neutral, F flip at a wall,
  *  C flip above both walls, D below both, A / B flip between the walls with price above / below it. */
-function classify(S, cw, pw, flip, pct, step, nearPct, wallSteps) {
-  const regime = Math.abs(pct) < 2 ? 'neutral' : pct > 0 ? 'positive' : 'negative'
-  const why = [`regime: net / gross ${pct.toFixed(1)}% → ${regime === 'neutral' ? `|${pct.toFixed(1)}%| < 2%` : pct > 0 ? '≥ +2%' : '≤ −2%'} → ${regime}`]
+function classify(S, cw, pw, flip, regime, step, nearPct, wallSteps) {
+  const why = [`regime: ${regime} (from SMC's regime badge)`]
   const res = (code, line) => ({ code, regime, why: [...why, line] })
   if (S > cw) return res('G', `G: price ${f(S)} > CW ${f(cw)} by ${f(S - cw)} → above the call wall (regime ${regime})`)
   if (S < pw) return res('G', `G: price ${f(S)} < PW ${f(pw)} by ${f(pw - S)} → below the put wall (regime ${regime})`)
   if (flip == null) {
     if (regime === 'negative') return res('C', 'C: no flip in the strike range and NEGATIVE gamma → the whole map is short gamma (flip beyond the walls)')
     if (regime === 'positive') return res('D', 'D: no flip in the strike range and POSITIVE gamma → the whole map is long gamma (flip beyond the walls)')
-    return res('E', `E: no flip in the strike range and NEUTRAL gamma (|${pct.toFixed(1)}%| < 2%)`)
+    return res('E', 'E: no flip in the strike range and NEUTRAL gamma (net GEX under 2% of gross)')
   }
   const nearPts = S * nearPct / 100
-  if (regime === 'neutral') return res('E', `E: regime NEUTRAL: |net / gross| ${Math.abs(pct).toFixed(1)}% < 2%`)
+  if (regime === 'neutral') return res('E', 'E: regime NEUTRAL (net GEX under 2% of gross): no dealer edge either way')
   if (Math.abs(S - flip) <= nearPts)
     return res('E', `E: |price - flip| = |${f(S)} - ${f(flip)}| = ${f(Math.abs(S - flip))} ≤ ${nearPct}% x ${f(S)} = ${f(nearPts)}`)
   const wallPts = wallSteps * step
@@ -289,8 +292,9 @@ function renderGrid(on) {
 }
 
 // ── the checker ──
-const IDS = ['spot', 'cw', 'pw', 'flip', 'pct', 'step', 'nearPct', 'wallSteps']
-const DEFAULTS = { step: '5', nearPct: '0.15', wallSteps: '2' }
+const IDS = ['spot', 'cw', 'pw', 'flip', 'regime', 'step', 'nearPct', 'wallSteps']
+const DEFAULTS = { regime: 'positive', step: '5', nearPct: '0.15', wallSteps: '2' }
+const REGIMES = ['positive', 'negative', 'neutral']
 const KEY = 'focus-gex-layout-standalone'
 const el = id => document.getElementById(id)
 let last = null            // the checker's latest result (for the PDF), null when the inputs are incomplete
@@ -302,18 +306,24 @@ function save() {
 function load() {
   let saved = {}
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') } catch { /* private window */ }
+  // 2026-11-12: the regime dropdown replaced the net / gross % box - an old saved % becomes its regime
+  if (!REGIMES.includes(saved.regime) && saved.pct != null && saved.pct !== '') {
+    const p = Number(saved.pct)
+    saved.regime = Math.abs(p) < 2 ? 'neutral' : p > 0 ? 'positive' : 'negative'
+  }
+  if (!REGIMES.includes(saved.regime)) delete saved.regime
   for (const i of IDS) el(i).value = saved[i] ?? DEFAULTS[i] ?? ''
 }
 
 function update() {
   save()
   last = null
-  const S = val('spot'), cw = val('cw'), pw = val('pw'), flip = val('flip'), pct = val('pct')
+  const S = val('spot'), cw = val('cw'), pw = val('pw'), flip = val('flip'), regime = el('regime').value
   const step = val('step') ?? 5, nearPct = val('nearPct') ?? 0.15, wallSteps = val('wallSteps') ?? 2
   const box = el('result')
-  if (S == null || cw == null || pw == null || pct == null) {
+  if (S == null || cw == null || pw == null) {
     box.style.borderColor = 'var(--border)'
-    box.innerHTML = '<span class="warn">Type price, CW, PW and net / gross % (flip optional) to see the layout and its math.</span>'
+    box.innerHTML = '<span class="warn">Type price, CW and PW, pick the regime (flip optional) to see the layout and its math.</span>'
     renderGrid(null)
     return
   }
@@ -323,8 +333,8 @@ function update() {
     renderGrid(null)
     return
   }
-  const r = classify(S, cw, pw, flip, pct, step, nearPct, wallSteps)
-  last = { S, cw, pw, flip, pct, r }
+  const r = classify(S, cw, pw, flip, regime, step, nearPct, wallSteps)
+  last = { S, cw, pw, flip, r }
   const sc = SCENARIO[r.code], c = TONE_COLOR[sc.tone], [rt, rc] = REGIME[r.regime]
   box.style.borderColor = c
   box.innerHTML = `<div class="code" style="color:${c}">${sc.code}</div>${layoutChart(sc.code)}
@@ -338,9 +348,9 @@ function update() {
 }
 
 load()
-for (const i of IDS) el(i).addEventListener('input', update)
+for (const i of IDS) { el(i).addEventListener('input', update); el(i).addEventListener('change', update) }
 el('example').onclick = () => {
-  const ex = { spot: '7560', cw: '7625', pw: '7440', flip: '7539.76', pct: '24', step: '5', nearPct: '0.15', wallSteps: '2' }
+  const ex = { spot: '7560', cw: '7625', pw: '7440', flip: '7539.76', regime: 'positive', step: '5', nearPct: '0.15', wallSteps: '2' }
   for (const i of IDS) el(i).value = ex[i]
   update()
 }
@@ -496,7 +506,7 @@ function buildPdf() {
 
   // title block + subtitle naming what this PDF covers
   const sub = last
-    ? `checked layout ${last.r.code}: price ${f(last.S)} · CW ${f(last.cw)} · PW ${f(last.pw)} · flip ${last.flip == null ? 'none' : f(last.flip)} · net / gross ${last.pct}%`
+    ? `checked layout ${last.r.code}: price ${f(last.S)} · CW ${f(last.cw)} · PW ${f(last.pw)} · flip ${last.flip == null ? 'none' : f(last.flip)} · ${last.r.regime} gamma`
     : 'reference: layouts A-G (checker not filled in)'
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(...C.navy)
   doc.text(TITLE, W / 2, 17, { align: 'center' })
@@ -533,7 +543,7 @@ function buildPdf() {
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...C.black)
   const legend = doc.splitTextToSize('Above the flip dealers are long gamma (they sell strength, buy weakness: quieter, mean-reverting); below it they are short gamma (they chase price: faster, trending). '
     + 'Charts: green = CALL WALL · purple = PUT WALL · orange dashed = GAMMA FLIP · black line = price (dashed = the other way it can go) · POS / NEG = gamma side of the flip. '
-    + 'Regime: net / gross GEX above +2% = positive, below -2% = negative, in between = neutral.', W - 2 * M)
+    + 'Regime = the badge in the SMC GEX Levels window (net GEX above +2% of gross = positive, below -2% = negative, in between = neutral).', W - 2 * M)
   doc.text(legend, M, y)
   y += legend.length * 3 + 1
 
