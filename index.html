@@ -148,6 +148,8 @@ footer { margin-top: 20px; padding-top: 8px; border-top: 1px solid var(--border)
       <label>Strike step <input id="step" class="sm" type="number" step="any" min="0" inputmode="decimal"></label>
       <label>E: price within <input id="nearPct" class="sm" type="number" step="0.05" min="0" max="2" inputmode="decimal"><span class="hint">% of the flip</span></label>
       <label>F: flip within <input id="wallSteps" class="sm" type="number" step="1" min="0" max="10" inputmode="decimal"><span class="hint">strikes of a wall</span></label>
+      <label title="0DTE ATM IV from SMC's EM Math row, NT8's GEX status or the TOS EM Left label (e.g. 23.4)">EM left: IV % <input id="iv" class="sm" type="number" step="any" min="0" inputmode="decimal" placeholder="optional"><span class="hint">0DTE ATM IV</span></label>
+      <label title="Hours to the 16:00 ET 0DTE expiry; blank = from the clock above">Hours to 16:00 <input id="hours" class="sm" type="number" step="any" min="0" inputmode="decimal" placeholder="auto"><span class="hint" id="hoursHint">blank = clock</span></label>
       <div style="display:flex; gap:8px">
         <button id="example" class="ghost" type="button">Example</button>
         <button id="clear" class="ghost" type="button">Clear</button>
@@ -291,8 +293,35 @@ function renderGrid(on) {
   g.innerHTML = h
 }
 
+/** EM left (same formula as FOCUS-SMC engine/gex_em.py, NT8 and TOS EM): price x IV x √(hours to the 16:00 ET expiry / 8,760),
+ *  and whether each wall is within it. Hours blank = from the clock (to today's close, or the next trading day's after it). */
+function emLeft(S, cw, pw, ivPct, hoursIn) {
+  if (ivPct == null || !(ivPct > 0)) return null
+  const auto = hoursIn == null
+  const h = auto ? hoursToClose(new Date()) : hoursIn
+  if (!(h > 0)) return null
+  const root = Math.sqrt(h / 8760), pts = S * ivPct / 100 * root
+  const math = `price x IV x √(hours to 16:00 / 8,760) = ${f(S)} x ${ivPct}% x √(${h.toFixed(2)} h${auto ? ' (clock)' : ''} / 8,760) `
+    + `= ${f(S)} x ${ivPct}% x ${root.toFixed(5)} = ±${f(pts)} pts → ${f(S - pts)} to ${f(S + pts)}`
+  const reach = [['CW', cw], ['PW', pw]].map(([n, w]) => {
+    const d = Math.abs(w - S), inside = d <= pts
+    return { inside, text: `${n} ${f(w)} is ${f(d)} pts away ${inside ? '≤' : '>'} ${f(pts)}: ${inside ? 'within EM left' : 'beyond EM left'}` }
+  })
+  return { pts, h, auto, math, reach }
+}
+/** hours from now to the next 16:00 ET close (13:00 on early-close days) of a trading day */
+function hoursToClose(now) {
+  for (let k = 0; k < 10; k++) {
+    const iso = isoIn(new Date(now.getTime() + k * 86400000), ET)
+    if (!tradingDay(iso)) continue
+    const c = marks(iso)[2], t = etToEpoch(iso, Math.floor(c / 60), c % 60)
+    if (t > now.getTime()) return (t - now.getTime()) / 3600000
+  }
+  return 0
+}
+
 // ── the checker ──
-const IDS = ['spot', 'cw', 'pw', 'flip', 'regime', 'step', 'nearPct', 'wallSteps']
+const IDS = ['spot', 'cw', 'pw', 'flip', 'regime', 'step', 'nearPct', 'wallSteps', 'iv', 'hours']
 const DEFAULTS = { regime: 'positive', step: '5', nearPct: '0.15', wallSteps: '2' }
 const REGIMES = ['positive', 'negative', 'neutral']
 const KEY = 'focus-gex-layout-standalone'
@@ -334,7 +363,8 @@ function update() {
     return
   }
   const r = classify(S, cw, pw, flip, regime, step, nearPct, wallSteps)
-  last = { S, cw, pw, flip, r }
+  const em = emLeft(S, cw, pw, val('iv'), val('hours'))
+  last = { S, cw, pw, flip, r, em }
   const sc = SCENARIO[r.code], c = TONE_COLOR[sc.tone], [rt, rc] = REGIME[r.regime]
   box.style.borderColor = c
   box.innerHTML = `<div class="code" style="color:${c}">${sc.code}</div>${layoutChart(sc.code)}
@@ -342,6 +372,9 @@ function update() {
       <div class="title" style="color:${c}">${sc.layout}</div>
       <div><span style="color:${rc}">${rt}</span> · price ${f(S)} · CW ${f(cw)} (${f(Math.abs(cw - S))} away) · PW ${f(pw)} (${f(Math.abs(S - pw))} away) · flip ${flip == null ? 'none' : f(flip)}</div>
       ${r.why.map(w => `<div class="math">= ${w}</div>`).join('')}
+      ${em ? `<div class="math"><b style="color:#38bdf8">EM left ±${f(em.pts)}</b> = ${em.math}</div>
+        <div class="math">${em.reach.map(x => `<span style="color:${x.inside ? 'var(--green)' : 'var(--yellow)'}">${x.text}</span>`).join(' · ')}</div>`
+        : '<div class="warn">EM left: type the 0DTE IV % to see the move still expected to 16:00 ET and whether the walls are within it.</div>'}
       <div><span class="look">Look for:</span> ${sc.look} <span class="avoid">Avoid:</span> ${sc.avoid}</div>
     </div>`
   renderGrid(r.code)
@@ -350,12 +383,12 @@ function update() {
 load()
 for (const i of IDS) { el(i).addEventListener('input', update); el(i).addEventListener('change', update) }
 el('example').onclick = () => {
-  const ex = { spot: '7560', cw: '7625', pw: '7440', flip: '7539.76', regime: 'positive', step: '5', nearPct: '0.15', wallSteps: '2' }
+  const ex = { spot: '7560', cw: '7625', pw: '7440', flip: '7539.76', regime: 'positive', step: '5', nearPct: '0.15', wallSteps: '2', iv: '23.4', hours: '5.04' }
   for (const i of IDS) el(i).value = ex[i]
   update()
 }
 el('clear').onclick = () => { for (const i of IDS) el(i).value = DEFAULTS[i] ?? ''; update() }
-update()
+// the first update() runs after the clock code below (EM left's auto hours use it)
 
 // ── header clock: New York time, market session and countdown (from FOCUS-Clock) ──
 const ET = 'America/New_York'
@@ -426,12 +459,15 @@ function tick() {
 }
 tick()
 setInterval(tick, 1000)
+update()
+// EM left with hours from the clock: redo it every 30 s so the hours keep counting down
+setInterval(() => { if (val('iv') != null && val('hours') == null) update() }, 30000)
 
 // ── PDF: the A-G table with mini charts, and the checked layout with its math when the checker is filled in ──
 // Page frame (masthead + 3-line footer) and colours copied from FOCUS-CAR-SCHEDULE's pdfFrame (= FOCUS-TMO standard):
 // white page, no colour fills, section bars = light grey band + orange text + orange left bar + orange underline.
 // jsPDF's standard fonts are WinAnsi only, so every string goes through pdfText() (>= <= -> instead of the symbols).
-const pdfText = s => String(s).replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/→/g, '->').replace(/[−–]/g, '-').replace(/×/g, 'x')
+const pdfText = s => String(s).replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/→/g, '->').replace(/[−–]/g, '-').replace(/×/g, 'x').replace(/√/g, 'sqrt')
 const PDF_TONE = { green: [0, 110, 0], red: [160, 0, 0], yellow: [170, 105, 0], white: [0, 0, 0] }
 const PDF_LINE = { cw: [0, 150, 60], pw: [130, 60, 200], flip: [230, 92, 0] }
 
@@ -506,7 +542,7 @@ function buildPdf() {
 
   // title block + subtitle naming what this PDF covers
   const sub = last
-    ? `checked layout ${last.r.code}: price ${f(last.S)} · CW ${f(last.cw)} · PW ${f(last.pw)} · flip ${last.flip == null ? 'none' : f(last.flip)} · ${last.r.regime} gamma`
+    ? `checked layout ${last.r.code}: price ${f(last.S)} · CW ${f(last.cw)} · PW ${f(last.pw)} · flip ${last.flip == null ? 'none' : f(last.flip)} · ${last.r.regime} gamma${last.em ? ` · EM left ±${f(last.em.pts)}` : ''}`
     : 'reference: layouts A-G (checker not filled in)'
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(...C.navy)
   doc.text(TITLE, W / 2, 17, { align: 'center' })
@@ -524,6 +560,8 @@ function buildPdf() {
     const lines = [
       [C.black, 'bold', `${REGIME[last.r.regime][0]}  ·  price ${f(last.S)}  ·  CW ${f(last.cw)} (${f(Math.abs(last.cw - last.S))} away)  ·  PW ${f(last.pw)} (${f(Math.abs(last.S - last.pw))} away)  ·  flip ${last.flip == null ? 'none' : f(last.flip)}`],
       ...last.r.why.map(w => [C.navy, 'normal', '= ' + w]),
+      ...(last.em ? [[C.navy, 'bold', `EM left ±${f(last.em.pts)} = ${last.em.math}`],
+                     [C.navy, 'normal', last.em.reach.map(x => x.text).join('  ·  ')]] : []),
       [PDF_TONE.green, 'bold', 'Look for: ' + sc.look],
       [PDF_TONE.red, 'bold', 'Avoid: ' + sc.avoid],
     ]
@@ -555,7 +593,7 @@ function buildPdf() {
     body: SCENARIOS.map(s => [s.code, '', s.layout, s.means, s.look, s.avoid].map(pdfText)),
     theme: 'grid',
     rowPageBreak: 'avoid',          // never split a layout (and its mini chart) across two pages
-    styles: { font: 'helvetica', fontSize: 7.5, cellPadding: 1.2, textColor: C.black, lineColor: C.midGrey, lineWidth: 0.15, valign: 'middle', minCellHeight: 14.5 },
+    styles: { font: 'helvetica', fontSize: 7.5, cellPadding: 1.2, textColor: C.black, lineColor: C.midGrey, lineWidth: 0.15, valign: 'middle', minCellHeight: last && last.em ? 13 : 14.5 },   // EM left lines: shorter rows keep it 1 page
     headStyles: { fillColor: C.lightGrey, textColor: C.navy, fontStyle: 'bold', fontSize: 8, minCellHeight: 0, lineColor: C.midGrey },
     columnStyles: {
       0: { cellWidth: 8, halign: 'center', fontStyle: 'bold', fontSize: 13 },
